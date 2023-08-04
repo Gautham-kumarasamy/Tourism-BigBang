@@ -47,7 +47,7 @@ namespace MakeYourTrip.Repos
                     return package;
                 }
                 else
-                    return null;
+                    return null;        
             }
             catch (SqlException ex)
             {
@@ -103,7 +103,7 @@ namespace MakeYourTrip.Repos
                     return package;
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException ex) 
             {
                 throw new InvalidSqlException(ex.Message);
             }

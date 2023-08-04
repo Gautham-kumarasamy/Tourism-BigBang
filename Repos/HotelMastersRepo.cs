@@ -13,7 +13,7 @@ namespace MakeYourTrip.Repos
 
         public HotelMastersRepo(TourPackagesContext context)
         {
-            _context = context;
+                _context = context;
         }
 
         public async Task<HotelMaster?> Add(HotelMaster item)
