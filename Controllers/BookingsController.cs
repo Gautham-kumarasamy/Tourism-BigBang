@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
+using MakeYourTrip.Interfaces;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Services;
 
 namespace MakeYourTrip.Controllers
 {
@@ -13,26 +16,32 @@ namespace MakeYourTrip.Controllers
     [ApiController]
     public class BookingsController : ControllerBase
     {
-        private readonly TourPackagesContext _context;
+        private readonly IBookingsService _bookingsService;
 
-        public BookingsController(TourPackagesContext context)
+        public BookingsController(IBookingsService bookingService)
         {
-            _context = context;
+            _bookingsService = bookingService;
         }
 
         // GET: api/Bookings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
-          if (_context.Bookings == null)
-          {
-              return NotFound();
-          }
-            return await _context.Bookings.ToListAsync();
+            try
+            {
+                var myhotel = await _bookingsService.View_All_bookings();
+                if (myhotel.Count > 0)
+                    return Ok(myhotel);
+                return BadRequest(new Error(10, "No bookings are Existing"));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
         }
 
         // GET: api/Bookings/5
-        [HttpGet("{id}")]
+/*        [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(int id)
         {
           if (_context.Bookings == null)
@@ -48,10 +57,10 @@ namespace MakeYourTrip.Controllers
 
             return booking;
         }
-
+*/
         // PUT: api/Bookings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+ /*       [HttpPut("{id}")]
         public async Task<IActionResult> PutBooking(int id, Booking booking)
         {
             if (id != booking.Id)
@@ -78,25 +87,32 @@ namespace MakeYourTrip.Controllers
             }
 
             return NoContent();
-        }
+        }*/
 
         // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking(Booking booking)
         {
-          if (_context.Bookings == null)
-          {
-              return Problem("Entity set 'TourPackagesContext.Bookings'  is null.");
-          }
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetBooking", new { id = booking.Id }, booking);
+            try
+            {
+                var myhotel = await _bookingsService.Add_Bookings(booking);
+                if (myhotel.Id != null)
+                    return Created("Hotel Added Successfully", myhotel);
+                return BadRequest(new Error(1, $"hotel {myhotel.Id} is Present already"));
+            }
+            catch (InvalidPrimaryKeyId ip)
+            {
+                return BadRequest(new Error(2, ip.Message));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
         }
 
         // DELETE: api/Bookings/5
-        [HttpDelete("{id}")]
+/*        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
             if (_context.Bookings == null)
@@ -113,11 +129,11 @@ namespace MakeYourTrip.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
+        }*/
 
-        private bool BookingExists(int id)
+       /* private bool BookingExists(int id)
         {
-            return (_context.Bookings?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
+            return (_bookingsService.Bookings?.Any(e => e.Id == id)).GetValueOrDefault();
+        }*/
     }
 }

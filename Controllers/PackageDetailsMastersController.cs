@@ -1,4 +1,4 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
 using MakeYourTrip.Exceptions;
+using MakeYourTrip.Interfaces;
 
 namespace MakeYourTrip.Controllers
 {
@@ -14,11 +15,11 @@ namespace MakeYourTrip.Controllers
     [ApiController]
     public class PackageDetailsMastersController : ControllerBase
     {
-        private readonly TourPackagesContext _context;
+        private readonly IPackageDetailsMastersService _packageDetailsMastersService;
 
-        public PackageDetailsMastersController(TourPackagesContext context)
+        public PackageDetailsMastersController(IPackageDetailsMastersService packageDetailsMastersService)
         {
-            _context = context;
+            _packageDetailsMastersService = packageDetailsMastersService;
         }
 
         // GET: api/PackageDetailsMasters
@@ -27,7 +28,7 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                var mypackages = await _packageMastersService.View_All_PackageMaster();
+                var mypackages = await _packageDetailsMastersService.View_All_PackageDetailsMaster();
                 if (mypackages.Count > 0)
                     return Ok(mypackages);
                 return BadRequest(new Error(10, "No packages are Existing"));
@@ -43,10 +44,10 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                var mypackage = await _packageMastersService.Add_PackageMaster(packageMaster);
+                var mypackage = await _packageDetailsMastersService.Add_PackageDetailsMaster(packageDetailsMaster);
                 if (mypackage.Id != null)
                     return Created("Added created Successfully", mypackage);
-                return BadRequest(new Error(1, $"Package {packageMaster.Id} is Present already"));
+                return BadRequest(new Error(1, $"Package Details {packageDetailsMaster.Id} is Present already"));
             }
             catch (InvalidPrimaryKeyId ip)
             {
@@ -60,4 +61,3 @@ namespace MakeYourTrip.Controllers
 
     }
 }
-*/

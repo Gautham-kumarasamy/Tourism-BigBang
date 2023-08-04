@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
+using MakeYourTrip.Interfaces;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Services;
 
 namespace MakeYourTrip.Controllers
 {
@@ -13,111 +16,126 @@ namespace MakeYourTrip.Controllers
     [ApiController]
     public class RoomBookingsController : ControllerBase
     {
-        private readonly TourPackagesContext _context;
+        private readonly IRoomBookingsService _roomBooking;
 
-        public RoomBookingsController(TourPackagesContext context)
+        public RoomBookingsController(IRoomBookingsService roomBooking)
         {
-            _context = context;
+            _roomBooking = roomBooking;
         }
 
         // GET: api/RoomBookings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RoomBooking>>> GetRoomBookings()
         {
-          if (_context.RoomBookings == null)
-          {
-              return NotFound();
-          }
-            return await _context.RoomBookings.ToListAsync();
-        }
-
-        // GET: api/RoomBookings/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RoomBooking>> GetRoomBooking(int id)
-        {
-          if (_context.RoomBookings == null)
-          {
-              return NotFound();
-          }
-            var roomBooking = await _context.RoomBookings.FindAsync(id);
-
-            if (roomBooking == null)
-            {
-                return NotFound();
-            }
-
-            return roomBooking;
-        }
-
-        // PUT: api/RoomBookings/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRoomBooking(int id, RoomBooking roomBooking)
-        {
-            if (id != roomBooking.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(roomBooking).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                var myhotel = await _roomBooking.View_All_RoomBookingsService();
+                if (myhotel.Count > 0)
+                    return Ok(myhotel);
+                return BadRequest(new Error(10, "No hotels are Existing"));
             }
-            catch (DbUpdateConcurrencyException)
+            catch (InvalidSqlException ise)
             {
-                if (!RoomBookingExists(id))
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+        // GET: api/RoomBookings/5
+        /*    [HttpGet("{id}")]
+            public async Task<ActionResult<RoomBooking>> GetRoomBooking(int id)
+            {
+              if (_context.RoomBookings == null)
+              {
+                  return NotFound();
+              }
+                var roomBooking = await _context.RoomBookings.FindAsync(id);
+
+                if (roomBooking == null)
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
-            }
 
-            return NoContent();
-        }
+                return roomBooking;
+            }*/
+
+        // PUT: api/RoomBookings/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /* [HttpPut("{id}")]
+         public async Task<IActionResult> PutRoomBooking(int id, RoomBooking roomBooking)
+         {
+             if (id != roomBooking.Id)
+             {
+                 return BadRequest();
+             }
+
+             _context.Entry(roomBooking).State = EntityState.Modified;
+
+             try
+             {
+                 await _context.SaveChangesAsync();
+             }
+             catch (DbUpdateConcurrencyException)
+             {
+                 if (!RoomBookingExists(id))
+                 {
+                     return NotFound();
+                 }
+                 else
+                 {
+                     throw;
+                 }
+             }
+
+             return NoContent();
+         }*/
 
         // POST: api/RoomBookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<RoomBooking>> PostRoomBooking(RoomBooking roomBooking)
         {
-          if (_context.RoomBookings == null)
-          {
-              return Problem("Entity set 'TourPackagesContext.RoomBookings'  is null.");
-          }
-            _context.RoomBookings.Add(roomBooking);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetRoomBooking", new { id = roomBooking.Id }, roomBooking);
-        }
-
-        // DELETE: api/RoomBookings/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRoomBooking(int id)
-        {
-            if (_context.RoomBookings == null)
+            try
             {
-                return NotFound();
+                var myhotel = await _roomBooking.Add_RoomBookingsService(roomBooking);
+                if (myhotel.Id != null)
+                    return Created("Hotel Added Successfully", myhotel);
+                return BadRequest(new Error(1, $"hotel {myhotel.Id} is Present already"));
             }
-            var roomBooking = await _context.RoomBookings.FindAsync(id);
-            if (roomBooking == null)
+            catch (InvalidPrimaryKeyId ip)
             {
-                return NotFound();
+                return BadRequest(new Error(2, ip.Message));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
             }
 
-            _context.RoomBookings.Remove(roomBooking);
-            await _context.SaveChangesAsync();
+            // DELETE: api/RoomBookings/5
+            /*     [HttpDelete("{id}")]
+                 public async Task<IActionResult> DeleteRoomBooking(int id)
+                 {
+                     if (_context.RoomBookings == null)
+                     {
+                         return NotFound();
+                     }
+                     var roomBooking = await _context.RoomBookings.FindAsync(id);
+                     if (roomBooking == null)
+                     {
+                         return NotFound();
+                     }
 
-            return NoContent();
-        }
+                     _context.RoomBookings.Remove(roomBooking);
+                     await _context.SaveChangesAsync();
 
-        private bool RoomBookingExists(int id)
-        {
-            return (_context.RoomBookings?.Any(e => e.Id == id)).GetValueOrDefault();
+                     return NoContent();
+                 }*/
+
+            /*    private bool RoomBookingExists(int id)
+            {
+                return (_context.RoomBookings?.Any(e => e.Id == id)).GetValueOrDefault();
+            }*/
         }
     }
 }
