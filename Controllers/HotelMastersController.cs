@@ -6,58 +6,100 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
-using MakeYourTrip.Exceptions;
 using MakeYourTrip.Interfaces;
+using MakeYourTrip.Services;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class HotelMastersController : ControllerBase
     {
-        private readonly IHotelMastersService _hotelMasterService;
+        private readonly IHotelMasterService _hotelMasterService;
 
-        public HotelMastersController(IHotelMastersService hotelMasterService)
+
+        public HotelMastersController(IHotelMasterService hotelMasterService)
         {
             _hotelMasterService = hotelMasterService;
         }
 
-        // GET: api/HotelMasters
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<HotelMaster>>> GetHotelMasters()
-        {
-            try
-            {
-                var myhotel = await _hotelMasterService.View_All_HotelMaster();
-                if (myhotel.Count > 0)
-                    return Ok(myhotel);
-                return BadRequest(new Error(10, "No hotels are Existing"));
-            }
-            catch (InvalidSqlException ise)
-            {
-                return BadRequest(new Error(25, ise.Message));
-            }
-        }
-
-        
+        [ProducesResponseType(typeof(HotelMaster), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
         [HttpPost]
-        public async Task<ActionResult<HotelMaster>> PostHotelMaster(HotelMaster hotelMaster)
+        public async Task<ActionResult<HotelMaster>> Add_HotelMaster(HotelMaster newHotel)
         {
-            try
-            {
-                var myhotel = await _hotelMasterService.Add_HotelMaster(hotelMaster);
-                if (myhotel.Id != null)
-                    return Created("Hotel Added Successfully", myhotel);
-                return BadRequest(new Error(1, $"hotel {myhotel.Id} is Present already"));
-            }
-            catch (InvalidPrimaryKeyId ip)
+            /* try
+             {*/
+            /* if (HotelMaster.Id <=0)
+                 throw new InvalidPrimaryID();*/
+            var myHotelMaster = await _hotelMasterService.Add_HotelMaster(newHotel);
+            if (myHotelMaster != null)
+                return Created("HotelMaster created Successfully", myHotelMaster);
+            return BadRequest(new Error(1, $"HotelMaster {newHotel.Id} is Present already"));
+            /*}
+            catch (InvalidPrimaryID ip)
             {
                 return BadRequest(new Error(2, ip.Message));
             }
             catch (InvalidSqlException ise)
             {
                 return BadRequest(new Error(25, ise.Message));
+            }*/
+        }
+
+
+        [ProducesResponseType(typeof(HotelMaster), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpGet]
+
+        public async Task<ActionResult<List<HotelMaster>>> Get_all_HotelMaster()
+        {
+            var myHotelMasters = await _hotelMasterService.Get_all_HotelMaster();
+            if (myHotelMasters?.Count > 0)
+                return Ok(myHotelMasters);
+            return BadRequest(new Error(10, "No HotelMasters are Existing"));
+        }
+
+        [ProducesResponseType(typeof(HotelMaster), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+
+        public async Task<ActionResult<HotelMaster>> View_HotelMaster(IdDTO idDTO)
+        {
+            try
+            {
+                if (idDTO.IdInt <= 0)
+                    return BadRequest(new Error(4, "Enter Valid HotelMaster ID"));
+                var myHotelMaster = await _hotelMasterService.View_HotelMaster(idDTO);
+                if (myHotelMaster != null)
+                    return Created("HotelMaster", myHotelMaster);
+                return BadRequest(new Error(9, $"There is no HotelMaster present for the id {idDTO.IdInt}"));
             }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+        [ProducesResponseType(typeof(HotelMaster), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+
+        public async Task<ActionResult<HotelMaster>> PostHotelMaster([FromForm] HotelFormModule hotelFormModule)
+        {
+            try
+            {
+                var createdHotel = await _hotelMasterService.PostImage(hotelFormModule);
+                return Ok(createdHotel);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
         }
 
     }

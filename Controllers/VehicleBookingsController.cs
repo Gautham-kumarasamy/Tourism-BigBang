@@ -6,118 +6,81 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Interfaces;
+using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
-    [Route("api/[controller]")]
+
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class VehicleBookingsController : ControllerBase
     {
-        private readonly TourPackagesContext _context;
+        private readonly IVehicleBookingService _VehicleBookingService;
 
-        public VehicleBookingsController(TourPackagesContext context)
+
+        public VehicleBookingsController(IVehicleBookingService VehicleBookingService)
         {
-            _context = context;
+            _VehicleBookingService = VehicleBookingService;
         }
 
-        // GET: api/VehicleBookings
+        [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+        public async Task<ActionResult<VehicleBooking>> Add_VehicleBooking(VehicleBooking newHotel)
+        {
+            /* try
+             {*/
+            /* if (VehicleBooking.Id <=0)
+                 throw new InvalidPrimaryID();*/
+            var myVehicleBooking = await _VehicleBookingService.Add_VehicleBooking(newHotel);
+            if (myVehicleBooking != null)
+                return Created("VehicleBooking created Successfully", myVehicleBooking);
+            return BadRequest(new Error(1, $"VehicleBooking {newHotel.Id} is Present already"));
+            /*}
+            catch (InvalidPrimaryID ip)
+            {
+                return BadRequest(new Error(2, ip.Message));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }*/
+        }
+
+
+        [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VehicleBooking>>> GetVehicleBookings()
+
+        public async Task<ActionResult<List<VehicleBooking>>> Get_all_VehicleBooking()
         {
-          if (_context.VehicleBookings == null)
-          {
-              return NotFound();
-          }
-            return await _context.VehicleBookings.ToListAsync();
+            var myVehicleBookings = await _VehicleBookingService.Get_all_VehicleBooking();
+            if (myVehicleBookings?.Count > 0)
+                return Ok(myVehicleBookings);
+            return BadRequest(new Error(10, "No VehicleBookings are Existing"));
         }
 
-        // GET: api/VehicleBookings/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<VehicleBooking>> GetVehicleBooking(int id)
+        [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+
+        public async Task<ActionResult<VehicleBooking>> View_VehicleBooking(IdDTO idDTO)
         {
-          if (_context.VehicleBookings == null)
-          {
-              return NotFound();
-          }
-            var vehicleBooking = await _context.VehicleBookings.FindAsync(id);
-
-            if (vehicleBooking == null)
-            {
-                return NotFound();
-            }
-
-            return vehicleBooking;
-        }
-
-        // PUT: api/VehicleBookings/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutVehicleBooking(int id, VehicleBooking vehicleBooking)
-        {
-            if (id != vehicleBooking.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(vehicleBooking).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                if (idDTO.IdInt <= 0)
+                    return BadRequest(new Error(4, "Enter Valid VehicleBooking ID"));
+                var myVehicleBooking = await _VehicleBookingService.View_VehicleBooking(idDTO);
+                if (myVehicleBooking != null)
+                    return Created("VehicleBooking", myVehicleBooking);
+                return BadRequest(new Error(9, $"There is no VehicleBooking present for the id {idDTO.IdInt}"));
             }
-            catch (DbUpdateConcurrencyException)
+            catch (InvalidSqlException ise)
             {
-                if (!VehicleBookingExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return BadRequest(new Error(25, ise.Message));
             }
-
-            return NoContent();
-        }
-
-        // POST: api/VehicleBookings
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<VehicleBooking>> PostVehicleBooking(VehicleBooking vehicleBooking)
-        {
-          if (_context.VehicleBookings == null)
-          {
-              return Problem("Entity set 'TourPackagesContext.VehicleBookings'  is null.");
-          }
-            _context.VehicleBookings.Add(vehicleBooking);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetVehicleBooking", new { id = vehicleBooking.Id }, vehicleBooking);
-        }
-
-        // DELETE: api/VehicleBookings/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteVehicleBooking(int id)
-        {
-            if (_context.VehicleBookings == null)
-            {
-                return NotFound();
-            }
-            var vehicleBooking = await _context.VehicleBookings.FindAsync(id);
-            if (vehicleBooking == null)
-            {
-                return NotFound();
-            }
-
-            _context.VehicleBookings.Remove(vehicleBooking);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool VehicleBookingExists(int id)
-        {
-            return (_context.VehicleBookings?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

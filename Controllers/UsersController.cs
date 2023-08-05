@@ -6,21 +6,21 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
+using Microsoft.AspNetCore.Cors;
 using MakeYourTrip.Exceptions;
-using MakeYourTrip.Models.DTO;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using MakeYourTrip.Interfaces;
-using Error = MakeYourTrip.Models.Error;
+using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [EnableCors("AngularCORS")]
     public class UsersController : ControllerBase
     {
-        private readonly IUsersService _userService;
+        private readonly IUserService _userService;
 
-        public UsersController(IUsersService userService)
+        public UsersController(IUserService userService)
         {
             _userService = userService;
         }
@@ -54,9 +54,9 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                UserDTO user = await _userService.Login(userDTO);
+                UserDTO user = await _userService.LogIN(userDTO);
                 if (user == null)
-                    return BadRequest(new Error(1, "Invalid Username or Password"));
+                    return BadRequest(new Error(1, "Invalid UserName or Password"));
                 return Ok(user);
             }
             catch (InvalidSqlException ise)
@@ -98,7 +98,7 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                bool myUser = await _userService.UpdatePassword(user);
+                bool myUser = await _userService.Update_Password(user);
                 if (myUser)
                     return NotFound(new Error(3, "Unable to Update Password"));
                 return Ok("Password Updated Successfully");
@@ -111,6 +111,50 @@ namespace MakeYourTrip.Controllers
             {
                 return BadRequest(new Error(4, ex.Message));
             }
+        }
+
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPut]
+
+        public async Task<ActionResult<User>?> ApproveAgent(User agent)
+        {
+           
+                var newagent = await _userService.ApproveAgent(agent);
+                if(newagent != null)
+                {
+                    return Ok(newagent);
+                }
+                return null;
+           
+        }
+
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpGet]
+
+        public async Task<ActionResult<List<User>?>> GetUnApprovedAgent()
+        {
+            var newagent = await _userService.GetUnApprovedAgent();
+            if (newagent != null)
+            {
+                return Ok(newagent);
+            }
+            return BadRequest(new Error(4, "no unapproved agent exist"));
+        }
+
+        [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpDelete]
+
+        public async Task<ActionResult<User>> DeleteAgent(UserDTO user)
+        {
+            var deletedagent =await _userService.DeleteAgent(user);
+            if (deletedagent != null)
+            {
+                return Ok(deletedagent);
+            }
+            return BadRequest(new Error(4, "no  agent exist"));
         }
     }
 }

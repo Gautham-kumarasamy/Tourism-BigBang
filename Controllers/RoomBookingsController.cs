@@ -6,136 +6,80 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
-using MakeYourTrip.Interfaces;
 using MakeYourTrip.Exceptions;
-using MakeYourTrip.Services;
+using MakeYourTrip.Interfaces;
+using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class RoomBookingsController : ControllerBase
     {
-        private readonly IRoomBookingsService _roomBooking;
+        private readonly IRoomBookingService _RoomBookingService;
 
-        public RoomBookingsController(IRoomBookingsService roomBooking)
+
+        public RoomBookingsController(IRoomBookingService RoomBookingService)
         {
-            _roomBooking = roomBooking;
+            _RoomBookingService = RoomBookingService;
         }
 
-        // GET: api/RoomBookings
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<RoomBooking>>> GetRoomBookings()
-        {
-
-            try
-            {
-                var myhotel = await _roomBooking.View_All_RoomBookingsService();
-                if (myhotel.Count > 0)
-                    return Ok(myhotel);
-                return BadRequest(new Error(10, "No hotels are Existing"));
-            }
-            catch (InvalidSqlException ise)
-            {
-                return BadRequest(new Error(25, ise.Message));
-            }
-        }
-
-        // GET: api/RoomBookings/5
-        /*    [HttpGet("{id}")]
-            public async Task<ActionResult<RoomBooking>> GetRoomBooking(int id)
-            {
-              if (_context.RoomBookings == null)
-              {
-                  return NotFound();
-              }
-                var roomBooking = await _context.RoomBookings.FindAsync(id);
-
-                if (roomBooking == null)
-                {
-                    return NotFound();
-                }
-
-                return roomBooking;
-            }*/
-
-        // PUT: api/RoomBookings/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        /* [HttpPut("{id}")]
-         public async Task<IActionResult> PutRoomBooking(int id, RoomBooking roomBooking)
-         {
-             if (id != roomBooking.Id)
-             {
-                 return BadRequest();
-             }
-
-             _context.Entry(roomBooking).State = EntityState.Modified;
-
-             try
-             {
-                 await _context.SaveChangesAsync();
-             }
-             catch (DbUpdateConcurrencyException)
-             {
-                 if (!RoomBookingExists(id))
-                 {
-                     return NotFound();
-                 }
-                 else
-                 {
-                     throw;
-                 }
-             }
-
-             return NoContent();
-         }*/
-
-        // POST: api/RoomBookings
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [ProducesResponseType(typeof(RoomBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
         [HttpPost]
-        public async Task<ActionResult<RoomBooking>> PostRoomBooking(RoomBooking roomBooking)
+        public async Task<ActionResult<RoomBooking>> Add_RoomBooking(RoomBooking newHotel)
         {
-
-            try
-            {
-                var myhotel = await _roomBooking.Add_RoomBookingsService(roomBooking);
-                if (myhotel.Id != null)
-                    return Created("Hotel Added Successfully", myhotel);
-                return BadRequest(new Error(1, $"hotel {myhotel.Id} is Present already"));
-            }
-            catch (InvalidPrimaryKeyId ip)
+            /* try
+             {*/
+            /* if (RoomBooking.Id <=0)
+                 throw new InvalidPrimaryID();*/
+            var myRoomBooking = await _RoomBookingService.Add_RoomBooking(newHotel);
+            if (myRoomBooking != null)
+                return Created("RoomBooking created Successfully", myRoomBooking);
+            return BadRequest(new Error(1, $"RoomBooking {newHotel.Id} is Present already"));
+            /*}
+            catch (InvalidPrimaryID ip)
             {
                 return BadRequest(new Error(2, ip.Message));
             }
             catch (InvalidSqlException ise)
             {
                 return BadRequest(new Error(25, ise.Message));
-            }
-
-            // DELETE: api/RoomBookings/5
-            /*     [HttpDelete("{id}")]
-                 public async Task<IActionResult> DeleteRoomBooking(int id)
-                 {
-                     if (_context.RoomBookings == null)
-                     {
-                         return NotFound();
-                     }
-                     var roomBooking = await _context.RoomBookings.FindAsync(id);
-                     if (roomBooking == null)
-                     {
-                         return NotFound();
-                     }
-
-                     _context.RoomBookings.Remove(roomBooking);
-                     await _context.SaveChangesAsync();
-
-                     return NoContent();
-                 }*/
-
-            /*    private bool RoomBookingExists(int id)
-            {
-                return (_context.RoomBookings?.Any(e => e.Id == id)).GetValueOrDefault();
             }*/
+        }
+
+
+        [ProducesResponseType(typeof(RoomBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpGet]
+
+        public async Task<ActionResult<List<RoomBooking>>> Get_all_RoomBooking()
+        {
+            var myRoomBookings = await _RoomBookingService.Get_all_RoomBooking();
+            if (myRoomBookings?.Count > 0)
+                return Ok(myRoomBookings);
+            return BadRequest(new Error(10, "No RoomBookings are Existing"));
+        }
+
+        [ProducesResponseType(typeof(RoomBooking), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+
+        public async Task<ActionResult<RoomBooking>> View_RoomBooking(IdDTO idDTO)
+        {
+            try
+            {
+                if (idDTO.IdInt <= 0)
+                    return BadRequest(new Error(4, "Enter Valid RoomBooking ID"));
+                var myRoomBooking = await _RoomBookingService.View_RoomBooking(idDTO);
+                if (myRoomBooking != null)
+                    return Created("RoomBooking", myRoomBooking);
+                return BadRequest(new Error(9, $"There is no RoomBooking present for the id {idDTO.IdInt}"));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
         }
     }
 }
