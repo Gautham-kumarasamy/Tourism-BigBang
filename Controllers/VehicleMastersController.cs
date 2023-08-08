@@ -6,81 +6,61 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
-using MakeYourTrip.Exceptions;
 using MakeYourTrip.Interfaces;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Services;
 using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
-
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class VehicleMastersController : ControllerBase
     {
-        private readonly IVehicleMasterService _VehicleMasterService;
+        private readonly IVehicleMastersService _vehicleMastersService;
 
-
-        public VehicleMastersController(IVehicleMasterService VehicleMasterService)
+        public VehicleMastersController(IVehicleMastersService vehicleMastersService)
         {
-            _VehicleMasterService = VehicleMasterService;
+            _vehicleMastersService = vehicleMastersService;
         }
 
-        [ProducesResponseType(typeof(VehicleMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-        public async Task<ActionResult<VehicleMaster>> Add_VehicleMaster(VehicleMaster newplace)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<VehicleMaster>>> GetVehicleMasters()
         {
-            /* try
-             {*/
-            /* if (additionalCategoryMaster.Id <=0)
-                 throw new InvalidPrimaryID();*/
-            var myVehicleMaster = await _VehicleMasterService.Add_VehicleMaster(newplace);
-            if (myVehicleMaster != null)
-                return Created("VehicleMaster created Successfully", myVehicleMaster);
-            return BadRequest(new Error(1, $"VehicleMaster {newplace.Id} is Present already"));
-            /*}
-            catch (InvalidPrimaryID ip)
+            try
+            {
+                var myVehicle = await _vehicleMastersService.View_All_VehicleMaster();
+                if (myVehicle.Count > 0)
+                    return Ok(myVehicle);
+                return BadRequest(new Error(10, "No Vehicles are Existing"));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<VehicleMaster>> PostVehicleMaster(VehicleMaster vehicleMaster)
+        {
+            try
+            {
+                var myVehicle = await _vehicleMastersService.Add_VehicleMaster(vehicleMaster);
+                if (myVehicle.Id != null)
+                    return Created("Vehicle Added Successfully", myVehicle);
+                return BadRequest(new Error(1, $"vehicle {myVehicle.Id} is Present already"));
+            }
+            catch (InvalidPrimaryKeyId ip)
             {
                 return BadRequest(new Error(2, ip.Message));
             }
             catch (InvalidSqlException ise)
             {
                 return BadRequest(new Error(25, ise.Message));
-            }*/
-        }
-
-        [ProducesResponseType(typeof(VehicleMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpGet]
-
-        public async Task<ActionResult<List<VehicleMaster>>> Get_all_VehicleMaster()
-        {
-            var myVehicleMasters = await _VehicleMasterService.Get_all_VehicleMaster();
-            if (myVehicleMasters?.Count > 0)
-                return Ok(myVehicleMasters);
-            return BadRequest(new Error(10, "No VehicleMaster are Existing"));
-        }
-
-        [ProducesResponseType(typeof(VehicleMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-
-        public async Task<ActionResult<VehicleMaster>> View_VehicleMaster(IdDTO idDTO)
-        {
-            try
-            {
-                if (idDTO.IdInt <= 0)
-                    return BadRequest(new Error(4, "Enter Valid VehicleMaster ID"));
-                var myVehicleMaster = await _VehicleMasterService.View_VehicleMaster(idDTO);
-                if (myVehicleMaster != null)
-                    return Created("VehicleMaster", myVehicleMaster);
-                return BadRequest(new Error(9, $"There is no VehicleMaster present for the id {idDTO.IdInt}"));
-            }
-            catch (InvalidSqlException ise)
-            {
-                return BadRequest(new Error(25, ise.Message));
             }
         }
+
+
 
     }
 }

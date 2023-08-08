@@ -94,7 +94,31 @@ namespace MakeYourTrip.Repos
 
         public async Task<Booking?> Update(Booking item)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var Bookings = await _context.Bookings.ToListAsync();
+                var Booking = Bookings.SingleOrDefault(h => h.Id == item.Id);
+                if (Booking != null)
+                {
+                    Booking.UserId = item.UserId != null ? item.UserId : Booking.UserId;
+                    Booking.PackageMasterId = item.PackageMasterId != null ? item.PackageMasterId : Booking.PackageMasterId;
+                    Booking.Feedback = item.Feedback != null ? item.Feedback : Booking.Feedback;
+                    Booking.TotalAmount = item.TotalAmount != null ? item.TotalAmount : Booking.TotalAmount;
+
+
+                    _context.Bookings.Update(Booking);
+                    await _context.SaveChangesAsync();
+                    return Booking;
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidSqlException(ex.Message);
+            }
+            return null;
         }
+
+
+
     }
 }

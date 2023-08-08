@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakeYourTrip.Repos
 {
-    public class UsersRepo: ICrud<User, UserDTO>
+    public class UsersRepo : ICrud<User, UserDTO>
     {
         private readonly TourPackagesContext _context;
 
@@ -75,7 +75,7 @@ namespace MakeYourTrip.Repos
             try
             {
                 var Users = await _context.Users.ToListAsync();
-                if(Users != null)
+                if (Users != null)
                 {
                     return Users;
                 }
@@ -95,8 +95,18 @@ namespace MakeYourTrip.Repos
                 if (users != null)
                 {
                     var Newuser = users.FirstOrDefault(u => u.Username == user.Username);
+
                     if (Newuser != null)
                     {
+                        Newuser.Username = user.Username != null ? user.Username : Newuser.Username;
+                        Newuser.Phone = user.Phone != null ? user.Phone : Newuser.Phone;
+                        Newuser.Email = user.Email != null ? user.Email : Newuser.Email;
+                        Newuser.Name = user.Name != null ? user.Name : Newuser.Name;
+                        Newuser.Hashkey = user.Hashkey != null ? user.Hashkey : Newuser.Hashkey;
+                        Newuser.Password = user.Password != null ? user.Password : Newuser.Password;
+                        Newuser.Role = user.Role != null ? user.Role : Newuser.Role;
+                        Newuser.IsActive = user.IsActive;
+
                         _context.Users.Update(Newuser);
                         await _context.SaveChangesAsync();
                         return Newuser;

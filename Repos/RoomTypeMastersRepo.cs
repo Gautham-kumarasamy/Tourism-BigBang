@@ -95,7 +95,7 @@ namespace MakeYourTrip.Repos
                 if (RoomTypeMaster != null)
                 {
                     RoomTypeMaster.RoomType = item.RoomType != null ? item.RoomType : RoomTypeMaster.RoomType;
-                    
+
 
                     _context.RoomTypeMasters.Update(RoomTypeMaster);
                     await _context.SaveChangesAsync();
@@ -109,5 +109,5 @@ namespace MakeYourTrip.Repos
             return null;
         }
     }
-    
+
 }

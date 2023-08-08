@@ -6,21 +6,21 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
-using Microsoft.AspNetCore.Cors;
 using MakeYourTrip.Exceptions;
-using MakeYourTrip.Interfaces;
 using MakeYourTrip.Models.DTO;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using MakeYourTrip.Interfaces;
+using Error = MakeYourTrip.Models.Error;
 
 namespace MakeYourTrip.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    [EnableCors("AngularCORS")]
     public class UsersController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUsersService _userService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUsersService userService)
         {
             _userService = userService;
         }
@@ -54,9 +54,9 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                UserDTO user = await _userService.LogIN(userDTO);
+                UserDTO user = await _userService.Login(userDTO);
                 if (user == null)
-                    return BadRequest(new Error(1, "Invalid UserName or Password"));
+                    return BadRequest(new Error(1, "Invalid Username or Password"));
                 return Ok(user);
             }
             catch (InvalidSqlException ise)
@@ -98,7 +98,7 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                bool myUser = await _userService.Update_Password(user);
+                bool myUser = await _userService.UpdatePassword(user);
                 if (myUser)
                     return NotFound(new Error(3, "Unable to Update Password"));
                 return Ok("Password Updated Successfully");
@@ -112,21 +112,20 @@ namespace MakeYourTrip.Controllers
                 return BadRequest(new Error(4, ex.Message));
             }
         }
-
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]//Success Response
         [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
         [HttpPut]
 
         public async Task<ActionResult<User>?> ApproveAgent(User agent)
         {
-           
-                var newagent = await _userService.ApproveAgent(agent);
-                if(newagent != null)
-                {
-                    return Ok(newagent);
-                }
-                return null;
-           
+
+            var newagent = await _userService.ApproveAgent(agent);
+            if (newagent != null)
+            {
+                return Ok(newagent);
+            }
+            return null;
+
         }
 
         [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]//Success Response
@@ -149,7 +148,7 @@ namespace MakeYourTrip.Controllers
 
         public async Task<ActionResult<User>> DeleteAgent(UserDTO user)
         {
-            var deletedagent =await _userService.DeleteAgent(user);
+            var deletedagent = await _userService.DeleteAgent(user);
             if (deletedagent != null)
             {
                 return Ok(deletedagent);

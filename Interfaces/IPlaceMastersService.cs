@@ -10,5 +10,8 @@ namespace MakeYourTrip.Interfaces
         Task<PlaceMaster?> Update_PlaceMaster(PlaceMaster placeMaster);
         Task<PlaceMaster?> View_PlaceMaster(IdDTO idDTO);
         Task<List<PlaceMaster>?> View_All_PlaceMasters();
+
+/*        Task<PlaceMaster?> Delete_PlaceMaster(IdDTO idDTO);
+*/
     }
 }

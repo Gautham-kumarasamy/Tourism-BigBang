@@ -15,6 +15,10 @@ public partial class Booking
 
     public decimal? TotalAmount { get; set; }
 
+    public DateTime? StartDate { get; set; }
+
+    public int? PeopleCount { get; set; }
+
     public virtual PackageMaster? PackageMaster { get; set; }
 
     public virtual ICollection<RoomBooking> RoomBookings { get; set; } = new List<RoomBooking>();

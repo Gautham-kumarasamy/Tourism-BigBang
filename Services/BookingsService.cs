@@ -30,10 +30,19 @@ namespace MakeYourTrip.Services
             return null;
         }
 
+
         public async Task<List<Booking>?> View_All_bookings()
         {
-            var myhotel = await _Bookingrepo.GetAll();
-            return myhotel;
+            var Bookings = await _Bookingrepo.GetAll();
+            /*if (PlateSizes != null)*/
+            return Bookings;
+        }
+
+        public async Task<Booking?> View_Booking(IdDTO idDTO)
+        {
+            var booking = await _Bookingrepo.GetValue(idDTO);
+            /*if (booking != null)*/
+            return booking;
         }
     }
 }

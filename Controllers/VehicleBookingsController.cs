@@ -6,76 +6,57 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
-using MakeYourTrip.Exceptions;
 using MakeYourTrip.Interfaces;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Services;
 using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
-
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class VehicleBookingsController : ControllerBase
     {
-        private readonly IVehicleBookingService _VehicleBookingService;
+        private readonly IVehicleBookingsService _vehicleBookingsService;
 
-
-        public VehicleBookingsController(IVehicleBookingService VehicleBookingService)
+        public VehicleBookingsController(IVehicleBookingsService vehicleBookingsService)
         {
-            _VehicleBookingService = VehicleBookingService;
+            _vehicleBookingsService = vehicleBookingsService;
         }
-
-        [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-        public async Task<ActionResult<VehicleBooking>> Add_VehicleBooking(VehicleBooking newHotel)
-        {
-            /* try
-             {*/
-            /* if (VehicleBooking.Id <=0)
-                 throw new InvalidPrimaryID();*/
-            var myVehicleBooking = await _VehicleBookingService.Add_VehicleBooking(newHotel);
-            if (myVehicleBooking != null)
-                return Created("VehicleBooking created Successfully", myVehicleBooking);
-            return BadRequest(new Error(1, $"VehicleBooking {newHotel.Id} is Present already"));
-            /*}
-            catch (InvalidPrimaryID ip)
-            {
-                return BadRequest(new Error(2, ip.Message));
-            }
-            catch (InvalidSqlException ise)
-            {
-                return BadRequest(new Error(25, ise.Message));
-            }*/
-        }
-
 
         [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
         [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
         [HttpGet]
-
-        public async Task<ActionResult<List<VehicleBooking>>> Get_all_VehicleBooking()
-        {
-            var myVehicleBookings = await _VehicleBookingService.Get_all_VehicleBooking();
-            if (myVehicleBookings?.Count > 0)
-                return Ok(myVehicleBookings);
-            return BadRequest(new Error(10, "No VehicleBookings are Existing"));
-        }
-
-        [ProducesResponseType(typeof(VehicleBooking), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-
-        public async Task<ActionResult<VehicleBooking>> View_VehicleBooking(IdDTO idDTO)
+        public async Task<ActionResult<IEnumerable<VehicleBooking>>> GetVehicleBookings()
         {
             try
             {
-                if (idDTO.IdInt <= 0)
-                    return BadRequest(new Error(4, "Enter Valid VehicleBooking ID"));
-                var myVehicleBooking = await _VehicleBookingService.View_VehicleBooking(idDTO);
-                if (myVehicleBooking != null)
-                    return Created("VehicleBooking", myVehicleBooking);
-                return BadRequest(new Error(9, $"There is no VehicleBooking present for the id {idDTO.IdInt}"));
+                var myVehicle = await _vehicleBookingsService.View_All_VehicleBooking();
+                if (myVehicle?.Count > 0)
+                    return Ok(myVehicle);
+                return BadRequest(new Error(10, "No Vehicle Booking Exists"));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+
+
+        [HttpPost]
+        public async Task<ActionResult<VehicleBooking>> PostVehicleBooking(VehicleBooking vehicleBooking)
+        {
+            try
+            {
+                var myVehicle = await _vehicleBookingsService.Add_VehicleBooking(vehicleBooking);
+                if (myVehicle != null)
+                    return Created("Vehicle Booked Successfully", myVehicle);
+                return BadRequest(new Error(1, $"vehicle {vehicleBooking.Id} is Booked already"));
+            }
+            catch (InvalidPrimaryKeyId ip)
+            {
+                return BadRequest(new Error(2, ip.Message));
             }
             catch (InvalidSqlException ise)
             {

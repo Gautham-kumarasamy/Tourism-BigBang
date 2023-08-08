@@ -1,35 +1,65 @@
 ﻿using MakeYourTrip.Interfaces;
-using MakeYourTrip.Models.DTO;
 using MakeYourTrip.Models;
+using MakeYourTrip.Models.DTO;
+using MakeYourTrip.Repos;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MakeYourTrip.Services
 {
     public class VehicleDetailsMasterService : IVehicleDetailsMasterService
     {
-        private ICrud<VehicleDetailsMaster, IdDTO> _vechivledetailmasterrepo;
+        private readonly ICrud<VehicleDetailsMaster, IdDTO> _vehicleDetailsMasterRepo;
+        private readonly IImageRepo<VehicleDetailsMaster, VehicleFormModel> _imageRepo;
 
-        public VehicleDetailsMasterService(ICrud<VehicleDetailsMaster, IdDTO> vechivledetailmasterrepo)
+        public VehicleDetailsMasterService(ICrud<VehicleDetailsMaster, IdDTO> vehicleDetailsMasterRepo, IImageRepo<VehicleDetailsMaster, VehicleFormModel> imageRepo)
         {
-            _vechivledetailmasterrepo = vechivledetailmasterrepo;
+            _vehicleDetailsMasterRepo = vehicleDetailsMasterRepo;
+            _imageRepo = imageRepo;
+
         }
 
-        public async Task<VehicleDetailsMaster> Add_VehicleDetailsMaster(VehicleDetailsMaster vehicleDetailsMaster)
+        public async Task<List<VehicleDetailsMaster>?> Add_VehicleDetailsMaster(List<VehicleDetailsMaster> VehicleDetailsMaster)
         {
-            var VehicleDetailsMasters = await _vechivledetailmasterrepo.GetAll();
-            var newVehicleDetailsMaster = VehicleDetailsMasters.SingleOrDefault(h => h.Id == vehicleDetailsMaster.Id);
-            if (newVehicleDetailsMaster == null)
+
+            List<VehicleDetailsMaster> addedVehicleDetailsMaster = new List<VehicleDetailsMaster>();
+
+            var VehicleDetailsMasters = await _vehicleDetailsMasterRepo.GetAll();
+
+            foreach (var vehicleDetailsMaster in VehicleDetailsMaster)
             {
-                var myVehicleDetailsMaster = await _vechivledetailmasterrepo.Add(vehicleDetailsMaster);
+
+                Console.WriteLine(vehicleDetailsMaster);
+
+                var myVehicleDetailsMaster = await _vehicleDetailsMasterRepo.Add(vehicleDetailsMaster);
+
                 if (myVehicleDetailsMaster != null)
-                    return myVehicleDetailsMaster;
+                {
+                    addedVehicleDetailsMaster.Add(myVehicleDetailsMaster);
+                }
+
             }
-            return null;
+            return addedVehicleDetailsMaster;
+
         }
 
         public async Task<List<VehicleDetailsMaster>?> View_All_VehicleDetailsMaster()
         {
-            var myVehicleDetailsMaster = await _vechivledetailmasterrepo.GetAll();
-            return myVehicleDetailsMaster;
+            var VehicleDetailsMasters = await _vehicleDetailsMasterRepo.GetAll();
+            return VehicleDetailsMasters;
+        }
+        public async Task<VehicleDetailsMaster> PostImage([FromForm] VehicleFormModel vehicleFormModel)
+        {
+            if (vehicleFormModel == null)
+            {
+                throw new Exception("Invalid file");
+            }
+            var item = await _imageRepo.PostImage(vehicleFormModel);
+            if (item == null)
+            {
+                return null;
+            }
+            return item;
         }
     }
 }

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
 using MakeYourTrip.Interfaces;
+using MakeYourTrip.Exceptions;
+using MakeYourTrip.Models.DTO;
 
 namespace MakeYourTrip.Controllers
 {
@@ -14,48 +16,55 @@ namespace MakeYourTrip.Controllers
     [ApiController]
     public class RoomTypeMastersController : ControllerBase
     {
-        private readonly IRoomTypeMasterService _RoomTypeMasterService;
+        private readonly IRoomTypeMastersService _roomTypeMastersService;
 
-
-        public RoomTypeMastersController(IRoomTypeMasterService RoomTypeMasterService)
+        public RoomTypeMastersController(IRoomTypeMastersService roomTypeMastersService)
         {
-            _RoomTypeMasterService = RoomTypeMasterService;
+            _roomTypeMastersService = roomTypeMastersService;
         }
 
         [ProducesResponseType(typeof(RoomTypeMaster), StatusCodes.Status200OK)]//Success Response
         [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-        public async Task<ActionResult<RoomTypeMaster>> Add_RoomTypeMaster(RoomTypeMaster newplace)
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<RoomTypeMaster>>> GetRoomTypeMasters()
         {
-            /* try
-             {*/
-            /* if (additionalCategoryMaster.Id <=0)
-                 throw new InvalidPrimaryID();*/
-            var myRoomTypeMaster = await _RoomTypeMasterService.Add_RoomTypeMaster(newplace);
-            if (myRoomTypeMaster != null)
-                return Created("RoomTypeMaster created Successfully", myRoomTypeMaster);
-            return BadRequest(new Error(1, $"RoomTypeMaster {newplace.Id} is Present already"));
-            /*}
-            catch (InvalidPrimaryID ip)
+            try
+            {
+                var myRoomType = await _roomTypeMastersService.View_All_RoomType();
+                if (myRoomType.Count > 0)
+                    return Ok(myRoomType);
+                return BadRequest(new Error(10, "No room types are Existing"));
+            }
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+
+
+        [ProducesResponseType(typeof(RoomTypeMaster), StatusCodes.Status200OK)]//Success Response
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
+        [HttpPost]
+        public async Task<ActionResult<RoomTypeMaster>> PostRoomTypeMaster(RoomTypeMaster roomTypeMaster)
+        {
+            try
+            {
+                var myRoomType = await _roomTypeMastersService.Add_RoomType(roomTypeMaster);
+                if (myRoomType.Id != null)
+                    return Created("Added created Successfully", myRoomType);
+                return BadRequest(new Error(1, $"Room type {roomTypeMaster.Id} is Present already"));
+            }
+            catch (InvalidPrimaryKeyId ip)
             {
                 return BadRequest(new Error(2, ip.Message));
             }
             catch (InvalidSqlException ise)
             {
                 return BadRequest(new Error(25, ise.Message));
-            }*/
-        }
-
-        [ProducesResponseType(typeof(RoomTypeMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpGet]
-
-        public async Task<ActionResult<List<RoomTypeMaster>>> Get_all_RoomTypeMaster()
-        {
-            var myRoomTypeMasters = await _RoomTypeMasterService.Get_all_RoomTypeMaster();
-            if (myRoomTypeMasters?.Count > 0)
-                return Ok(myRoomTypeMasters);
-            return BadRequest(new Error(10, "No RoomTypeMaster are Existing"));
-        }
+            }
+        }   
+        
     }
 }

@@ -8,40 +8,50 @@ using Microsoft.EntityFrameworkCore;
 using MakeYourTrip.Models;
 using MakeYourTrip.Exceptions;
 using MakeYourTrip.Interfaces;
-using MakeYourTrip.Services;
 using MakeYourTrip.Models.DTO;
+using MakeYourTrip.Services;
 
 namespace MakeYourTrip.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class PackageDetailsMastersMastersController : ControllerBase
+    public class PackageDetailsMastersController : ControllerBase
     {
-        private readonly IPackageDetailsMasterService _PackageDetailsMasterService;
+        private readonly IPackageDetailsMastersService _packageDetailsMastersService;
 
-        public PackageDetailsMastersMastersController(IPackageDetailsMasterService PackageDetailsMasterService)
+        public PackageDetailsMastersController(IPackageDetailsMastersService packageDetailsMastersService)
         {
-            _PackageDetailsMasterService = PackageDetailsMasterService;
+            _packageDetailsMastersService = packageDetailsMastersService;
         }
 
-        [ProducesResponseType(typeof(PackageDetailsMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpPost]
-        public async Task<ActionResult<List<PackageDetailsMaster>>> Add_PackageDetailsMaster(List<PackageDetailsMaster> PackageDetailsMaster)
+        // GET: api/PackageDetailsMasters
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PackageDetailsMaster>>> GetPackageDetailsMasters()
         {
-
             try
             {
-                var myPackageDetailsMaster = await _PackageDetailsMasterService.Add_PackageDetailsMaster(PackageDetailsMaster);
-
-                if (myPackageDetailsMaster!= null)
-                {
-                    return Created("PackageDetailsMaster created Successfully", myPackageDetailsMaster);
-                }
-
-                return BadRequest(new Error(1, "No PackageDetailsMaster were added."));
+                var mypackages = await _packageDetailsMastersService.View_All_PackageDetailsMaster();
+                if (mypackages.Count > 0)
+                    return Ok(mypackages);
+                return BadRequest(new Error(10, "No packages are Existing"));
             }
-            catch (InvalidPrimaryID ip)
+            catch (InvalidSqlException ise)
+            {
+                return BadRequest(new Error(25, ise.Message));
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<PackageDetailsMaster>> PostPackageDetailsMaster(PackageDetailsMaster packageDetailsMaster)
+        {
+            try
+            {
+                var mypackage = await _packageDetailsMastersService.Add_PackageDetailsMaster(packageDetailsMaster);
+                if (mypackage.Id != null)
+                    return Created("Added created Successfully", mypackage);
+                return BadRequest(new Error(1, $"Package Details {packageDetailsMaster.Id} is Present already"));
+            }
+            catch (InvalidPrimaryKeyId ip)
             {
                 return BadRequest(new Error(2, ip.Message));
             }
@@ -49,19 +59,6 @@ namespace MakeYourTrip.Controllers
             {
                 return BadRequest(new Error(25, ise.Message));
             }
-
-        }
-
-        [ProducesResponseType(typeof(PackageDetailsMaster), StatusCodes.Status200OK)]//Success Response
-        [ProducesResponseType(StatusCodes.Status404NotFound)]//Failure Response
-        [HttpGet]
-
-        public async Task<ActionResult<List<PackageDetailsMaster>>> Get_all_PackageDetailsMaster()
-        {
-            var myPackageDetailsMasters = await _PackageDetailsMasterService.Get_all_PackageDetailsMaster();
-            if (myPackageDetailsMasters?.Count > 0)
-                return Ok(myPackageDetailsMasters);
-            return BadRequest(new Error(10, "No PackageDetailsMaster are Existing"));
         }
 
 
@@ -73,7 +70,7 @@ namespace MakeYourTrip.Controllers
         {
             try
             {
-                var createdHotel = await _PackageDetailsMasterService.PostImage(placeFormModel);
+                var createdHotel = await _packageDetailsMastersService.PostImage(placeFormModel);
                 return Ok(createdHotel);
 
             }
@@ -83,5 +80,6 @@ namespace MakeYourTrip.Controllers
             }
 
         }
+
     }
 }
